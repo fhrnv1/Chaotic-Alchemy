@@ -195,37 +195,62 @@ function getSubstrateByMappingIndex(index) {
 }
 
 
-document.getElementById('generateButton').addEventListener('click', () => {
-    const seedInput = document.getElementById('seedInput').value;
-    if (!seedInput) {
-        alert('请输入世界种子！');
-        return;
-    }
-
-    // 直接以原始字符串作为种子，避免 JS Number 精度丢失，由 JavaRandom 内部的 parseJavaSeed 负责规范化解析
-    const seed = seedInput.trim();
-    
+function renderResultsWithSeed(seed) {
     const alchemyData = generateAlchemyData(seed);
 
-    // Display Chaos Transmutation
+    // Display Chaos Transmutation (render after mastermind on page, but listed here logically)
     const chaosList = document.getElementById('chaos-list');
     chaosList.innerHTML = '';
     const mapped = new Set();
+    const specialPairs = [];
+    const normalPairs = [];
     for (let i = 0; i < 38; i++) {
         if (mapped.has(i)) continue;
-        
         const partnerIndex = alchemyData.chaos_mapping[i];
         mapped.add(partnerIndex);
-
         const item1 = getSubstrateByMappingIndex(i);
         const item2 = getSubstrateByMappingIndex(partnerIndex);
-
+        // 判断是否为特殊配对
+        const id1 = item1.id || '';
+        const id2 = item2.id || '';
+        let isSpecial = false;
+        let emoji = '';
+        if (id1 === 'kubejs:substrate_silicon' || id2 === 'kubejs:substrate_silicon') {
+            isSpecial = true;
+            emoji = '🟦';
+        }
+        if (id1 === 'kubejs:substrate_silver' || id2 === 'kubejs:substrate_silver') {
+            isSpecial = true;
+            emoji = '🟪';
+        }
+        const pairObj = {item1, item2, isSpecial, emoji};
+        if (isSpecial) {
+            specialPairs.push(pairObj);
+        } else {
+            normalPairs.push(pairObj);
+        }
+    }
+    // 先渲染特殊配对，再渲染普通配对
+    function renderPair({item1, item2, isSpecial, emoji}) {
         const li = document.createElement('li');
-        li.textContent = `${item1.name} ↔ ${item2.name}`;
+        li.textContent = '';
+        if (isSpecial && emoji) {
+            li.textContent = emoji + ' ';
+        }
+        li.textContent += `${item1.name} ↔ ${item2.name}`;
+        if (isSpecial) {
+            li.classList.add('special-substrate');
+            const badge = document.createElement('span');
+            badge.className = 'special-badge';
+            badge.innerHTML = '⭐ 特殊';
+            li.appendChild(badge);
+        }
         chaosList.appendChild(li);
     }
+    specialPairs.forEach(renderPair);
+    normalPairs.forEach(renderPair);
 
-    // Display Mastermind Recipes
+    // Display Mastermind Recipes (render first visually)
     const mastermindContainer = document.getElementById('mastermind-container');
     mastermindContainer.innerHTML = '';
     for (let i = 0; i < 7; i++) {
@@ -233,10 +258,10 @@ document.getElementById('generateButton').addEventListener('click', () => {
         const card = document.createElement('div');
         card.className = 'mastermind-card';
 
-    const title = document.createElement('h4');
-    const catalystLabel = (window.i18n ? i18n.t('catalystLabel') : '催化剂');
-    const catName = (i === 6) ? (window.i18n ? i18n.t('chaos') : '混沌') : displayCatalystName(i);
-    title.textContent = `${catalystLabel}: ${catName}`;
+        const title = document.createElement('h4');
+        const catalystLabel = (window.i18n ? i18n.t('catalystLabel') : '催化剂');
+        const catName = (i === 6) ? (window.i18n ? i18n.t('chaos') : '混沌') : displayCatalystName(i);
+        title.textContent = `${catalystLabel}: ${catName}`;
         card.appendChild(title);
 
         const recipeList = document.createElement('ul');
@@ -251,8 +276,47 @@ document.getElementById('generateButton').addEventListener('click', () => {
     }
 
 
-    document.getElementById('results').classList.remove('hidden');
-});
+    const results = document.getElementById('results');
+    results.classList.remove('hidden');
+    // 将焦点移到结果，便于无障碍阅读
+    results.focus();
+}
+
+function setError(msg){
+    const el = document.getElementById('seedError');
+    if(!el) return;
+    el.textContent = msg || '';
+}
+
+function handleSubmit(e){
+    if(e) e.preventDefault();
+    const seedInputEl = document.getElementById('seedInput');
+    const raw = seedInputEl.value;
+    if (!raw || !raw.trim()) {
+        setError(window.i18n ? i18n.t('errorEmptySeed') : '请输入世界种子。');
+        return;
+    }
+    setError('');
+    const seed = raw.trim();
+    try { localStorage.setItem('seed', seed); } catch(e){}
+    renderResultsWithSeed(seed);
+}
+
+// 绑定表单提交与按钮
+(() => {
+    const form = document.getElementById('seedForm');
+    if (form) form.addEventListener('submit', handleSubmit);
+    const btn = document.getElementById('generateButton');
+    if (btn) btn.addEventListener('click', handleSubmit);
+    // 恢复最近的语言与种子
+    try {
+        const saved = localStorage.getItem('seed');
+        if (saved) {
+            const input = document.getElementById('seedInput');
+            if (input) input.value = saved;
+        }
+    } catch(e){}
+})();
 
 // 当语言切换时，重新渲染（保持最近一次 seed 输入）
 document.addEventListener('locale-changed', () => {

@@ -4,6 +4,7 @@
       title: '炼金配方查询器',
       subtitle: '输入你的 Minecraft 世界种子，查询对应的混沌嬗变和催化剂大师配方。',
       seedPlaceholder: '输入世界种子 (文本或数字)',
+      seedLabel: '世界种子',
       genButton: '生成配方',
       resultsTitle: '查询结果',
       chaosTitle: '混沌嬗变 (Chaos Transmutation)',
@@ -14,6 +15,8 @@
       chaos: '混沌',
       silicon: '硅',
       silverSpecial: '银 (特殊)',
+      languageLabel: '语言',
+      errorEmptySeed: '请输入世界种子。',
       // categories (display only)
       catalystNames: ['火成','草本','易挥发','晶化','金属','宝石']
     },
@@ -21,6 +24,7 @@
       title: 'Alchemy Recipe Finder',
       subtitle: 'Enter your Minecraft world seed to get Chaos Transmutation and Catalyst Mastermind solutions.',
       seedPlaceholder: 'Enter world seed (text or number)',
+      seedLabel: 'World Seed',
       genButton: 'Generate',
       resultsTitle: 'Results',
       chaosTitle: 'Chaos Transmutation',
@@ -31,15 +35,18 @@
       chaos: 'Chaos',
       silicon: 'Silicon',
       silverSpecial: 'Silver (Special)',
+      languageLabel: 'Language',
+      errorEmptySeed: 'Please enter a world seed.',
       catalystNames: ['Igneous','Herbal','Volatile','Crystal','Metal','Gem']
     }
   };
 
   const i18n = {
-    locale: (navigator.language || 'zh-CN').startsWith('zh') ? 'zh-CN' : 'en',
+    locale: (localStorage.getItem('locale') || (navigator.language || 'zh-CN')).startsWith('zh') ? 'zh-CN' : (localStorage.getItem('locale') || 'en'),
     setLocale(newLocale){
       if(!messages[newLocale]) return;
       this.locale = newLocale;
+      try { localStorage.setItem('locale', newLocale); } catch(e){}
       this.applyTranslations();
       document.dispatchEvent(new CustomEvent('locale-changed', {detail:{locale:newLocale}}));
     },
