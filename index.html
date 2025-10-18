@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="title">KubeJS 炼金配方查询器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+            <h1 data-i18n="title">炼金配方查询器</h1>
+            <div>
+                <select id="localeSelect">
+                    <option value="zh-CN">中文</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+        <p data-i18n="subtitle">输入你的 Minecraft 世界种子，查询对应的混沌嬗变和催化剂大师配方。</p>
+        
+        <div class="input-group">
+            <input type="text" id="seedInput" data-i18n-placeholder="seedPlaceholder" placeholder="输入世界种子 (文本或数字)">
+            <button id="generateButton" data-i18n-button="genButton">生成配方</button>
+        </div>
+
+        <div id="results" class="hidden">
+            <h2 data-i18n="resultsTitle">查询结果</h2>
+            <div id="chaos-transmutation">
+                <h3 data-i18n="chaosTitle">混沌嬗变 (Chaos Transmutation)</h3>
+                <p data-i18n="chaosDesc">使用混沌基板 (Substrate of Chaos) 时，物品会按以下规则进行配对转换：</p>
+                <ul id="chaos-list"></ul>
+            </div>
+            <div id="mastermind-recipes">
+                <h3 data-i18n="mastermindTitle">催化剂大师 (Catalyst Mastermind)</h3>
+                <p data-i18n="mastermindDesc">每个催化剂的正确配方如下：</p>
+                <div id="mastermind-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script>
+      // 初始化语言
+      (function(){
+        const sel = document.getElementById('localeSelect');
+        sel.value = i18n.locale;
+        i18n.applyTranslations();
+        sel.addEventListener('change', ()=> i18n.setLocale(sel.value));
+      })();
+    </script>
+    <script src="alchemy.js"></script>
+</body>
+</html>
